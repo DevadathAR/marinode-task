@@ -23,7 +23,7 @@ class UploadProvider extends ChangeNotifier {
     File? file = await uploadService.pickFile();
 
     if (file != null) {
-      if (file.lengthSync() < 10 * 1024 * 1024) {
+      if (file.lengthSync() < 100 * 1024 * 1024) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("File size must be at least 100MB.")),
         );
@@ -52,11 +52,9 @@ class UploadProvider extends ChangeNotifier {
     try {
       await uploadService.uploadFile(file, (progress) {
         _uploadProgress = progress;
-        uploadService.showUploadNotification(progress);
         notifyListeners();
       });
 
-      uploadService.cancelUploadNotification();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Upload Completed")),
       );

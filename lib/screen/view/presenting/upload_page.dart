@@ -22,57 +22,70 @@ class UploadPage extends StatelessWidget {
               style: AppTextStyle.boldText(size: 26, color: Appcolors.white),
             ),
           ),
-          backgroundColor: Appcolors.blue,
+          backgroundColor: Appcolors.blue.withOpacity(.85),
         ),
         body: Consumer<UploadProvider>(
           builder: (context, provider, child) {
             return Padding(
               padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    //select files button will view only when no file is selcted , after completion of upload button will disply again
-                    if (provider.selectedFile == null ||
-                        provider.uploadProgress >= 1.0) 
-                      _selectionButton(provider, context),  
-                   //files name will view only when  file is selcted , 
-                
-                    if (provider.selectedFile != null) ...[
-                      const SizedBox(height: 20),
+              child: ListView(
+                children: [
+                   if (provider.uploadProgress == 1)
                       Text(
-                        "File: ${provider.selectedFile!.uri.pathSegments.last}",
-                        style: AppTextStyle.semiboldText(
+                        textAlign: TextAlign.center,
+                        another,
+                        style: AppTextStyle.regularText(
+                            size: 16, color: Appcolors.black).copyWith(fontStyle: FontStyle.italic),
+                      ),
+
+                  //select files button will view only when no file is selcted , after completion of upload button will disply again
+                  if (provider.selectedFile == null ||
+                      provider.uploadProgress >= 1.0)
+                    _buttons(context, provider),
+                  //files name will view only when  file is selcted ,
+
+                  if (provider.selectedFile != null) ...[
+                    const SizedBox(height: 20),
+                    Text(textAlign: TextAlign.center,
+                      "File: ${provider.selectedFile!.uri.pathSegments.last}",
+                      style: AppTextStyle.semiboldText(
+                          size: 20, color: Appcolors.purple),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Display selected file initialy disply a thumbainl
+                    if (provider.uploadService
+                        .isVideo(provider.selectedFile!.path)) ...[
+                      _thumbnailAndVideoSection(provider),
+                      const SizedBox(height: 8),
+                      //paly button
+                      _buttons(context, provider, isPlayButton: true),
+                    ],
+                    const SizedBox(height: 20),
+                    if (provider.uploadProgress != 1)
+                      LinearProgressIndicator(
+                        value: provider.uploadProgress,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.blueAccent),
+                      ),
+                    const SizedBox(height: 10),
+                    if (provider.uploadProgress != 1)
+                      Text(
+                        textAlign: TextAlign.center,
+                        "Uploading: ${(provider.uploadProgress * 100).toStringAsFixed(0)}%",
+                        style: AppTextStyle.regularText(
                             size: 20, color: Appcolors.black),
                       ),
-                      const SizedBox(height: 20),
-                
-                      // Display selected file initialy disply a thumbainl
-                      if (provider.uploadService
-                          .isVideo(provider.selectedFile!.path)) ...[
-                        _thumbnailAndVideoSection(provider),
-                        const SizedBox(height: 8),
-                        //paly button
-                        _playPauseButton(provider),
-                      ],
-                      const SizedBox(height: 20),
-                      if (provider.uploadProgress != 1)
-                        LinearProgressIndicator(
-                          value: provider.uploadProgress,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              Colors.blueAccent),
-                        ),
-                      const SizedBox(height: 10),
-                      if (provider.uploadProgress != 1)
-                        Text(textAlign: TextAlign.center,
-                          "Uploading: ${(provider.uploadProgress * 100).toStringAsFixed(0)}%",
-                          style: AppTextStyle.regularText(
-                              size: 20, color: Appcolors.black),
-                        ),
-                    
-                    ],
+                       if (provider.uploadProgress == 1)
+                      Text(
+                        textAlign: TextAlign.center,
+                        uploaded,
+                        style: AppTextStyle.regularText(
+                            size: 16, color: Appcolors.black).copyWith(fontStyle: FontStyle.italic),
+                      ),
                   ],
-                ),
+                ],
               ),
             );
           },
@@ -83,30 +96,44 @@ class UploadPage extends StatelessWidget {
 
   //play pause button
 
- Widget _playPauseButton(UploadProvider provider) {
-  return ElevatedButton(
-    onPressed: provider.toggleVideoPlayback,
-    style: ElevatedButton.styleFrom(
-      padding: EdgeInsets.all(8),
-      minimumSize: Size(50, 50), // Sets a small size for the button
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+  Widget _buttons(context, UploadProvider provider,
+      {bool isPlayButton = false}) {
+    return GestureDetector(
+      onTap: isPlayButton
+          ? provider.toggleVideoPlayback
+          : () => provider.pickFile(context),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 150),
+        height: 40,
+        decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+            color: Appcolors.blue),
+        child: isPlayButton
+            ? Icon(
+                provider.videoController?.value.isPlaying == true
+                    ? Icons.pause
+                    : Icons.play_arrow,
+                size: 24,
+                color: Appcolors.white,
+              )
+            : Center(
+                child: FittedBox(fit: BoxFit.scaleDown,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      addfile,
+                      style:
+                          AppTextStyle.mediumText(size: 18, color: Appcolors.white),
+                    ),
+                  ),
+                ),
+              ),
       ),
-      backgroundColor: Appcolors.blue
-      ,
-    ),
-    child: Icon(
-      provider.videoController?.value.isPlaying == true
-          ? Icons.pause
-          : Icons.play_arrow,
-      size: 24,
-      color: Appcolors.white,
-    ),
-  );
-}
+    );
+  }
 
-
-  //show thubnail and play video 
+  //show thubnail and play video
 
   Widget _thumbnailAndVideoSection(UploadProvider provider) {
     return SizedBox(
@@ -120,22 +147,4 @@ class UploadPage extends StatelessWidget {
     );
   }
 
-  ElevatedButton _selectionButton(
-      UploadProvider provider, BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        textStyle: AppTextStyle.semiboldText(size: 20, color: Appcolors.black),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        backgroundColor: Appcolors.blue,
-      ),
-      onPressed: () => provider.pickFile(context),
-      child: Text(
-        addfile,
-        style: AppTextStyle.mediumText(size: 18, color: Appcolors.white),
-      ),
-    );
-  }
 }

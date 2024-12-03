@@ -52,29 +52,4 @@ class UploadService {
     }
   }
 
-  void showUploadNotification(double progress) {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-      'upload_channel',
-      'File Uploads',
-      channelDescription: 'Shows the progress of file uploads.',
-      importance: Importance.high,
-      priority: Priority.high,
-      ongoing: true,
-    );
-
-    const NotificationDetails platformDetails =
-        NotificationDetails(android: androidDetails);
-
-    flutterLocalNotificationsPlugin.show(
-      0,
-      'Uploading...',
-      'Progress: ${(progress * 100).toStringAsFixed(0)}%',
-      platformDetails,
-    );
-  }
-
-  void cancelUploadNotification() {
-    flutterLocalNotificationsPlugin.cancel(0);
-  }
 }
