@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "985920566090",
+    "project_id": "video-player-lilac-infotech",
+    "storage_bucket": "video-player-lilac-infotech.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:985920566090:android:5c73dcec8a7bb825f547b3",
+        "android_client_info": {
+          "package_name": "com.example.hungrx_task"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4EcdMo2Kz3UWxohRw65PK48Xg4EEMh70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:985920566090:android:a2c311a7cc3f8513f547b3",
+        "android_client_info": {
+          "package_name": "com.example.marinode"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4EcdMo2Kz3UWxohRw65PK48Xg4EEMh70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:985920566090:android:0688acf32eb356a3f547b3",
+        "android_client_info": {
+          "package_name": "com.example.video_player_lilacinfotech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4EcdMo2Kz3UWxohRw65PK48Xg4EEMh70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
