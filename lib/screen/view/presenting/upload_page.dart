@@ -1,4 +1,3 @@
-// upload_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:marinode/screen/provider/upload_provider.dart';
@@ -30,35 +29,33 @@ class UploadPage extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: ListView(
                 children: [
-                   if (provider.uploadProgress == 1)
-                      Text(
-                        textAlign: TextAlign.center,
-                        another,
-                        style: AppTextStyle.regularText(
-                            size: 16, color: Appcolors.black).copyWith(fontStyle: FontStyle.italic),
-                      ),
-
-                  //select files button will view only when no file is selcted , after completion of upload button will disply again
+                  if (provider.uploadProgress == 1)
+                    Text(
+                      textAlign: TextAlign.center,
+                      another,
+                      style: AppTextStyle.regularText(
+                        size: 16,
+                        color: Appcolors.black,
+                      ).copyWith(fontStyle: FontStyle.italic),
+                    ),
                   if (provider.selectedFile == null ||
                       provider.uploadProgress >= 1.0)
                     _buttons(context, provider),
-                  //files name will view only when  file is selcted ,
-
                   if (provider.selectedFile != null) ...[
                     const SizedBox(height: 20),
-                    Text(textAlign: TextAlign.center,
+                    Text(
+                      textAlign: TextAlign.center,
                       "File: ${provider.selectedFile!.uri.pathSegments.last}",
                       style: AppTextStyle.semiboldText(
-                          size: 20, color: Appcolors.purple),
+                        size: 20,
+                        color: Appcolors.purple,
+                      ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Display selected file initialy disply a thumbainl
                     if (provider.uploadService
                         .isVideo(provider.selectedFile!.path)) ...[
                       _thumbnailAndVideoSection(provider),
                       const SizedBox(height: 8),
-                      //paly button
                       _buttons(context, provider, isPlayButton: true),
                     ],
                     const SizedBox(height: 20),
@@ -67,7 +64,8 @@ class UploadPage extends StatelessWidget {
                         value: provider.uploadProgress,
                         backgroundColor: Colors.grey[300],
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.blueAccent),
+                          Colors.blueAccent,
+                        ),
                       ),
                     const SizedBox(height: 10),
                     if (provider.uploadProgress != 1)
@@ -75,14 +73,18 @@ class UploadPage extends StatelessWidget {
                         textAlign: TextAlign.center,
                         "Uploading: ${(provider.uploadProgress * 100).toStringAsFixed(0)}%",
                         style: AppTextStyle.regularText(
-                            size: 20, color: Appcolors.black),
+                          size: 20,
+                          color: Appcolors.black,
+                        ),
                       ),
-                       if (provider.uploadProgress == 1)
+                    if (provider.uploadProgress == 1)
                       Text(
                         textAlign: TextAlign.center,
                         uploaded,
                         style: AppTextStyle.regularText(
-                            size: 16, color: Appcolors.black).copyWith(fontStyle: FontStyle.italic),
+                          size: 16,
+                          color: Appcolors.black,
+                        ).copyWith(fontStyle: FontStyle.italic),
                       ),
                   ],
                 ],
@@ -94,8 +96,6 @@ class UploadPage extends StatelessWidget {
     );
   }
 
-  //play pause button
-
   Widget _buttons(context, UploadProvider provider,
       {bool isPlayButton = false}) {
     return GestureDetector(
@@ -106,8 +106,9 @@ class UploadPage extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 150),
         height: 40,
         decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(15)),
-            color: Appcolors.blue),
+          borderRadius: const BorderRadius.all(Radius.circular(15)),
+          color: Appcolors.blue,
+        ),
         child: isPlayButton
             ? Icon(
                 provider.videoController?.value.isPlaying == true
@@ -117,14 +118,17 @@ class UploadPage extends StatelessWidget {
                 color: Appcolors.white,
               )
             : Center(
-                child: FittedBox(fit: BoxFit.scaleDown,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6.0),
                     child: Text(
                       textAlign: TextAlign.center,
                       addfile,
-                      style:
-                          AppTextStyle.mediumText(size: 18, color: Appcolors.white),
+                      style: AppTextStyle.mediumText(
+                        size: 18,
+                        color: Appcolors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -132,8 +136,6 @@ class UploadPage extends StatelessWidget {
       ),
     );
   }
-
-  //show thubnail and play video
 
   Widget _thumbnailAndVideoSection(UploadProvider provider) {
     return SizedBox(
@@ -146,5 +148,4 @@ class UploadPage extends StatelessWidget {
       ),
     );
   }
-
 }

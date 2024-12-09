@@ -1,4 +1,3 @@
-// upload_provider.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -13,17 +12,112 @@ class UploadProvider extends ChangeNotifier {
   VideoPlayerController? _videoController;
 
   UploadProvider(this.flutterLocalNotificationsPlugin)
-      : uploadService = UploadService(flutterLocalNotificationsPlugin);
+      : uploadService = UploadService(flutterLocalNotificationsPlugin) {
+    _initializeNotifications();
+  }
 
   File? get selectedFile => _selectedFile;
   double get uploadProgress => _uploadProgress;
   VideoPlayerController? get videoController => _videoController;
 
+  Future<void> _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        // Handle notification taps if needed
+      },
+    );
+
+    // Create the notification channel
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'upload_channel_id', // Unique ID for this channel
+      'File Upload', // Channel name
+      description: 'Shows progress of file uploads', // Channel description
+      importance: Importance.low,
+    );
+
+    final NotificationAppLaunchDetails? notificationAppLaunchDetails =
+        await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+
+    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(channel);
+    }
+  }
+
+  Future<void> _showProgressNotification() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'upload_channel_id',
+      'File Upload',
+      channelDescription: 'Shows progress of file uploads',
+      importance: Importance.low,
+      priority: Priority.low,
+      onlyAlertOnce: true,
+      showProgress: true,
+      maxProgress: 100,
+      ongoing: true,
+      enableVibration:
+          false, // Optional: Disable vibration for ongoing notifications
+    );
+
+    final NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      1, // Notification ID
+      'Uploading File',
+      'Progress: ${(uploadProgress * 100).toStringAsFixed(0)}%',
+      platformChannelSpecifics,
+      payload: 'upload', // Optional: Add custom payload
+    );
+  }
+
+  Future<void> _updateProgressNotification() async {
+    final AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'upload_channel_id',
+      'File Upload',
+      channelDescription: 'Shows progress of file uploads',
+      importance: Importance.low,
+      priority: Priority.low,
+      showProgress: true,
+      maxProgress: 100,
+      progress: (uploadProgress * 100).toInt(),
+      ongoing: true,
+      enableVibration:
+          false, // Optional: Disable vibration for ongoing notifications
+    );
+
+    final NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      1, // Notification ID
+      'Uploading File',
+      'Progress: ${(uploadProgress * 100).toStringAsFixed(0)}%',
+      platformChannelSpecifics,
+    );
+  }
+
+  Future<void> _cancelProgressNotification() async {
+    await flutterLocalNotificationsPlugin.cancel(1);
+  }
+
   Future<void> pickFile(BuildContext context) async {
     File? file = await uploadService.pickFile();
 
     if (file != null) {
-      if (file.lengthSync() < 100 * 1024 * 1024) {
+      if (file.lengthSync() < 10 * 1024 * 1024) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("File size must be at least 100MB.")),
         );
@@ -50,15 +144,20 @@ class UploadProvider extends ChangeNotifier {
 
   Future<void> _uploadFile(File file, BuildContext context) async {
     try {
-      await uploadService.uploadFile(file, (progress) {
-        _uploadProgress = progress;
+      for (int progress = 0; progress <= 100; progress++) {
+        _uploadProgress = progress / 100;
         notifyListeners();
-      });
+        await _updateProgressNotification();
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
+      await _cancelProgressNotification();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Upload Completed")),
       );
     } catch (e) {
+      await _cancelProgressNotification();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Upload failed: $e")),
       );
