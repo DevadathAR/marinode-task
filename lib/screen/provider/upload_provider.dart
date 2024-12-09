@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:marinode/screen/service/service.dart';
+import 'package:marinode/screen/utilities/color.dart';
 import 'package:video_player/video_player.dart';
 
 class UploadProvider extends ChangeNotifier {
@@ -10,15 +14,22 @@ class UploadProvider extends ChangeNotifier {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   final UploadService uploadService;
   VideoPlayerController? _videoController;
+  bool _isNetworkAvailable = true;
+  bool _isConnected = true; // Track connectivity status
+  Timer? _connectivityTimer; // Timer for periodic connectivity checks
+
+  bool get isNetworkAvailable => _isNetworkAvailable;
 
   UploadProvider(this.flutterLocalNotificationsPlugin)
       : uploadService = UploadService(flutterLocalNotificationsPlugin) {
     _initializeNotifications();
+    _startConnectivityChecks();
   }
 
   File? get selectedFile => _selectedFile;
   double get uploadProgress => _uploadProgress;
   VideoPlayerController? get videoController => _videoController;
+  bool get isConnected => _isConnected; // Expose connectivity status
 
   Future<void> _initializeNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -114,26 +125,40 @@ class UploadProvider extends ChangeNotifier {
   }
 
   Future<void> pickFile(BuildContext context) async {
-    File? file = await uploadService.pickFile();
-
-    if (file != null) {
-      if (file.lengthSync() < 10 * 1024 * 1024) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("File size must be at least 100MB.")),
-        );
-        return;
-      }
-
-      _selectedFile = file;
-      notifyListeners();
-
-      if (uploadService.isVideo(file.path)) {
-        _initializeVideoPreview(file);
-      }
-
-      await _uploadFile(file, context);
-    }
+  // Check connectivity status
+  await checkConnectivity();
+  if (!_isConnected) {
+    ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(content: Text("No internet connection."),backgroundColor: Appcolors.red.withOpacity(0.5)),
+    );
+    return;
   }
+
+  // Proceed with file selection
+  File? file = await uploadService.pickFile();
+
+  if (file != null) {
+    // Validate file size
+    if (file.lengthSync() < 100 * 1024 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(content: Text("File size must be at least 100MB."),backgroundColor: Appcolors.red.withOpacity(0.5)),
+      );
+      return;
+    }
+
+    _selectedFile = file;
+    notifyListeners();
+
+    // Check if the file is a video and initialize preview
+    if (uploadService.isVideo(file.path)) {
+      _initializeVideoPreview(file);
+    }
+
+    // Attempt to upload the file
+    await _uploadFile(file, context);
+  }
+}
+
 
   void _initializeVideoPreview(File file) {
     _videoController = VideoPlayerController.file(file)
@@ -142,20 +167,58 @@ class UploadProvider extends ChangeNotifier {
       });
   }
 
-  Future<void> _uploadFile(File file, BuildContext context) async {
+  Future<void> checkConnectivity() async {
+    
     try {
-      for (int progress = 0; progress <= 100; progress++) {
-        _uploadProgress = progress / 100;
+      final result = await InternetAddress.lookup('google.com');
+      _isConnected = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (e) {
+      _isConnected = false;
+    }
+    notifyListeners();
+  }
+
+  void _startConnectivityChecks() {
+    _connectivityTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (timer) async {
+        await checkConnectivity();
+      },
+    );
+  }
+
+  Future<void> _uploadFile(File file, BuildContext context) async {
+    await checkConnectivity();
+
+    final storage = FirebaseStorage.instance;
+
+    try {
+      // Reference to the file on Firebase
+      final storageRef =
+          storage.ref().child('uploads/${file.uri.pathSegments.last}');
+
+      // Start the upload task
+      final uploadTask = storageRef.putFile(file);
+
+      // Listen for progress updates
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        _uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
         notifyListeners();
-        await _updateProgressNotification();
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
+        _updateProgressNotification();
+      });
 
-      await _cancelProgressNotification();
+      // Wait for the upload to complete
+      await uploadTask.whenComplete(() async {
+        final downloadUrl = await storageRef.getDownloadURL();
+        _uploadProgress = 1.0;
+        notifyListeners();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Upload Completed")),
-      );
+        await _cancelProgressNotification();
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text("Upload Completed"),backgroundColor: Appcolors.green.withOpacity(0.5)),
+        );
+
+      });
     } catch (e) {
       await _cancelProgressNotification();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -165,13 +228,15 @@ class UploadProvider extends ChangeNotifier {
   }
 
   void dispose() {
+    _connectivityTimer
+        ?.cancel(); // Stop the timer when the provider is disposed
+
     _videoController?.dispose();
     super.dispose();
   }
 
   void toggleVideoPlayback() {
     if (_videoController == null) return;
-
     if (_videoController!.value.isPlaying) {
       _videoController?.pause();
     } else {

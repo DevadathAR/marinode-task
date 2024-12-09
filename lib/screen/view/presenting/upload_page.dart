@@ -86,6 +86,32 @@ class UploadPage extends StatelessWidget {
                           color: Appcolors.black,
                         ).copyWith(fontStyle: FontStyle.italic),
                       ),
+                    if (!provider.isConnected) ...[
+                      Center(
+                        child: Text(
+                          'Internet Issue',
+                          style: AppTextStyle.regularText(
+                            size: 12,
+                            color: Appcolors.red,
+                            fontstyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      InkWell(
+                        onTap: () => provider.checkConnectivity(),
+                        child: Center(
+                          child: Text(
+                            "Retry",
+                            style: AppTextStyle.regularText(
+                              size: 18,
+                              color: Appcolors.blue,
+                              fontstyle: FontStyle.italic
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -101,7 +127,12 @@ class UploadPage extends StatelessWidget {
     return GestureDetector(
       onTap: isPlayButton
           ? provider.toggleVideoPlayback
-          : () => provider.pickFile(context),
+          : () async {
+              await provider.checkConnectivity();
+              if (provider.isNetworkAvailable) {
+                provider.pickFile(context);
+              }
+            },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 150),
         height: 40,

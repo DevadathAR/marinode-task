@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:marinode/screen/provider/upload_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart'; // Import the provider package
+import 'package:provider/provider.dart'; 
 import 'package:marinode/screen/view/presenting/upload_page.dart';
 
 void main() async {
