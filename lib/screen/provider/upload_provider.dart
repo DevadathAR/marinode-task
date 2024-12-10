@@ -111,7 +111,7 @@ class UploadProvider extends ChangeNotifier {
         return;
       }
 
-      if (file.lengthSync() < 10 * 1024 * 1024) {
+      if (file.lengthSync() < 100 * 1024 * 1024) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("File size must be at least 100MB."),
