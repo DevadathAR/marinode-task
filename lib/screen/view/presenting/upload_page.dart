@@ -29,6 +29,9 @@ class UploadPage extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: ListView(
                 children: [
+//
+//initial show upload button, after selection of file button disapper and show file name, the after complete the upload the button appear again and also disply a upload other file text
+//
                   if (provider.uploadProgress == 1)
                     Text(
                       textAlign: TextAlign.center,
@@ -59,6 +62,9 @@ class UploadPage extends StatelessWidget {
                       _buttons(context, provider, isPlayButton: true),
                     ],
                     const SizedBox(height: 20),
+//
+// below portion will disply while uploding the video
+//
                     if (provider.uploadProgress != 1)
                       LinearProgressIndicator(
                         value: provider.uploadProgress,
@@ -77,6 +83,9 @@ class UploadPage extends StatelessWidget {
                           color: Appcolors.black,
                         ),
                       ),
+//
+//this will disply after successfully upload the video
+//
                     if (provider.uploadProgress == 1)
                       Text(
                         textAlign: TextAlign.center,
@@ -86,6 +95,10 @@ class UploadPage extends StatelessWidget {
                           color: Appcolors.black,
                         ).copyWith(fontStyle: FontStyle.italic),
                       ),
+
+//
+//check internet connectivity and then disply the below UI if there  is no internext
+//
                     if (!provider.isConnected) ...[
                       Center(
                         child: Text(
@@ -104,10 +117,9 @@ class UploadPage extends StatelessWidget {
                           child: Text(
                             "Retry",
                             style: AppTextStyle.regularText(
-                              size: 18,
-                              color: Appcolors.blue,
-                              fontstyle: FontStyle.italic
-                            ),
+                                size: 18,
+                                color: Appcolors.blue,
+                                fontstyle: FontStyle.italic),
                           ),
                         ),
                       ),
